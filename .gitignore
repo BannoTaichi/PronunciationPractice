@@ -1,0 +1,19 @@
+# 仮想環境を無視
+venv/
+.env
+
+# ログファイルを無視
+logs/
+*.log
+
+# Pythonキャッシュを無視
+__pycache__/
+*.pyc
+
+# 音声ファイルを無視
+*.wav
+*.mp3
+
+# audioフォルダを追跡
+!audio/
+!audio/.gitkeep

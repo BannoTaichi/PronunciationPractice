@@ -1,0 +1,1 @@
+conda create -n korea python=3.10
