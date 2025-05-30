@@ -7,14 +7,15 @@ from transcript import evaluate, transcript
 import tkinter as tk
 
 
+# 録音アプリケーションのクラス
 class Recorder:
     def __init__(self, format, channels, rate, chunk, lang, filename):
-        self.format = format
-        self.channels = channels
-        self.rate = rate
-        self.chunk = chunk
-        self.set_lang(lang)
-        self.filename = filename
+        self.format = format  # 音声フォーマット
+        self.channels = channels  # チャンネル数
+        self.rate = rate  # サンプリングレート
+        self.chunk = chunk  # チャンクサイズ
+        self.set_lang(lang)  # 言語設定
+        self.filename = filename  # 保存する音声ファイル名
 
         # PyAudioの初期化
         self.audio = pyaudio.PyAudio()
@@ -55,7 +56,7 @@ class Recorder:
             input_device_index = p.get_default_input_device_info()["index"]
         return input_device_index
 
-    # 録音データを格納するリスト
+    # 録音を開始するメソッド
     def start_recording(self):
         global recording
         stream = self.stream
