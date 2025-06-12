@@ -12,15 +12,14 @@ class Model:
     def __init__(self):
         genai.configure(api_key=API_KEY)
         self.model = genai.GenerativeModel("gemini-2.0-flash")
+        self.lan = "en"  # デフォルトの言語は英語
 
     # AIによる文生成
     # [IN] (str) language: 言語（デフォルトは英語）
     # [IN] (str) level: レベル（デフォルトは中級）
     # [OUT] (str) response: 生成された文
     def generate_text(self, language="英語", level="中級"):
-        if language == "英語":
-            self.lan = "en"
-        else:
+        if language == "韓国語":
             self.lan = "ko"
         prompt = f"""
             {language}の文を{level}向けに5個生成してください。

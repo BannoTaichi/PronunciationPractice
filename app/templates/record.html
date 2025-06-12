@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>外国語発音チェック</title>
+    <script>
+        function toggleRecording() {
+            var button = document.getElementById("recordButton");
+            if (button.innerText === "録音開始") {
+                button.innerText = "録音停止";
+            } else {
+                document.getElementById("stopForm").submit();
+            }
+        }
+    </script>
+</head>
+<body>
+    <h2>外国語発音チェック</h2>
+
+    <p>以下の文章を音読してください</p>
+    <p><strong>{{ foreigns[idx] }}</strong></p>
+    <p>意味</p>
+    <p><strong>{{ japaneses[idx] }}</strong></p>
+
+    <button id="recordButton" onclick="toggleRecording()">録音開始</button>
+
+</body>
+</html>
