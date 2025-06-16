@@ -3,8 +3,12 @@ import wave
 import pandas as pd
 from rapidfuzz import fuzz
 import threading
-from transcript import evaluate, transcript
 import tkinter as tk
+
+try:
+    from transcript import evaluate, transcript
+except:
+    from .transcript import evaluate, transcript
 
 
 # 録音アプリケーションのクラス

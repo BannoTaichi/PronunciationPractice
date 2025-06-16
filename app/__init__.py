@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request
-from generate import Model
-from record import Recorder
-from transcript import transcript, evaluate
+from .generate import Model
+from .record import Recorder
+from .transcript import transcript, evaluate
 import re
 
 app = Flask(__name__)

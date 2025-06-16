@@ -1,49 +1,43 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <title>外国語発音チェック</title>
+{% extends "layout.html" %}
+{% block content %}
+
+<form action="/record" method="post">
+    <!-- 言語選択 -->
+    <label for="language">チェックする言語:</label>
+    <select name="language">
+      <option value="英語">英語</option>
+      <option value="韓国語">韓国語</option>
+    </select>
+    <br>
+
+
+    <!-- 自分の文章を使うか選択 -->
+    <label for="use_my_text">自分の文章を使いますか?</label>
+    <select id="use_my_text" name="use_my_text" onchange="toggleOptions()">
+      <option value="No">No</option>
+      <option value="Yes">Yes</option>
+    </select>
     <script>
-        function toggleOptions() {
-            var use_my_text = document.getElementById("use_my_text").value;
-            document.getElementById("userText").style.display = (use_my_text === "Yes") ? "block" : "none";
-        }
+    function toggleOptions() {
+        var use_my_text = document.getElementById("use_my_text").value;
+        document.getElementById("userText").style.display = (use_my_text === "Yes") ? "block" : "none";
+    }
     </script>
-</head>
-<body>
-    <h2>外国語発音チェック</h2>
+    <br>
 
-    <form action="/record" method="post">
-        <!-- 言語選択 -->
-        <label for="language">チェックする言語:</label>
-        <select name="language">
-          <option value="英語">英語</option>
-          <option value="韓国語">韓国語</option>
-        </select>
-        <br>
+    <!-- 自分の文章を入力欄 -->
+    <div id="userText" style="display: none;">
+        <label for="raw_text">文章を入力:</label>
+        <textarea name="raw_text"></textarea>
+    </div>
+    <br>
 
+    <!-- 録音時間の設定 -->
+    <label for="rec_time">録音時間（秒）:</label>
+    <input type="number" name="rec_time" min="5" max="30" value="10">
 
-        <!-- 自分の文章を使うか選択 -->
-        <label for="use_my_text">自分の文章を使いますか?</label>
-        <select id="use_my_text" name="use_my_text" onchange="toggleOptions()">
-          <option value="No">No</option>
-          <option value="Yes">Yes</option>
-        </select>
-        <br>
+    <br>
+    <button type="submit">チェック開始</button>
+</form>
 
-        <!-- 自分の文章を入力欄 -->
-        <div id="userText" style="display: none;">
-            <label for="raw_text">文章を入力:</label>
-            <textarea name="raw_text"></textarea>
-        </div>
-        <br>
-
-        <!-- 録音時間の設定 -->
-        <label for="rec_time">録音時間（秒）:</label>
-        <input type="number" name="rec_time" min="5" max="30" value="10">
-
-        <br>
-        <button type="submit">チェック開始</button>
-    </form>
-</body>
-</html>
+{% endblock %}
