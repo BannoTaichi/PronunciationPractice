@@ -64,12 +64,13 @@ class Recorder:
     def start_recording(self):
         global recording
         stream = self.stream
+        chunk = self.chunk
 
         print("録音開始")
         frames = []
         recording = True
         while recording:
-            data = stream.read(CHUNK)
+            data = stream.read(chunk)
             frames.append(data)
         self.frames = frames
 
@@ -139,5 +140,5 @@ if __name__ == "__main__":
 
     sentence = "Hello, how are you?"
     user_sentence = transcript(OUTPUT_FILENAME, lang=recorder.lang)
-    result_df = evaluate(sentence, user_sentence)
-    print(result_df)
+    result = evaluate(sentence, user_sentence)
+    print(result)

@@ -1,20 +1,46 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <title>外国語発音チェック</title>
-</head>
-<body>
-    <h2>外国語発音チェック</h2>
+{% extends "layout.html" %}
+{% block content %}
 
-    <p>以下の文章を音読してください</p>
-    <p><strong>{{ foreigns[idx] }}</strong></p>
-    <p>意味</p>
-    <p><strong>{{ japaneses[idx] }}</strong></p>
+<p>以下の文章を音読してください</p>
+<p><strong>{{ foreigns[idx] }}</strong></p>
+{% if japaneses %}
+<p>意味</p>
+<p><strong>{{ japaneses[idx] }}</strong></p>
+{% endif %}
 
-    <button id="recordButton">録音開始</button>
-    <audio id="audioElement" controls></audio>
-    <script src="../static/js/record.js"></script>
+{% if recording %}
+<!-- 録音ボタン -->
+<form action="/sound" method="post" enctype="multipart/form-data">
+  <input type="submit" id="soundBottun" value="録音開始">
 
-</body>
-</html>
+  <input type="hidden" name="idx" value="{{ idx }}">
+  <input type="hidden" name="foreigns" value="{{ foreigns }}">
+  <input type="hidden" name="japaneses" value="{{ japaneses }}">
+  <input type="hidden" name="scores" value="{{ scores }}">
+  <input type="hidden" name="pronunciations" value="{{ pronunciations }}">
+  <input type="hidden" name="language" value="{{language }}">
+</form>
+
+{% else %}
+<!-- 次の文章に遷移するボタン -->
+<h3>あなたの発音</h3>
+<p>{{ pronunciations[idx] }}</p>
+<h3>類似度スコア</h3>
+<p>{{ scores[idx] }}</p>
+
+<div>
+  <form action="/record" method="post" enctype="multipart/form-data">
+  <p><input type="submit" id="sendButton" value="次の文章へ"></p>
+  
+  <input type="hidden" name="idx" value="{{ idx + 1 }}">
+  <input type="hidden" name="foreigns" value="{{ foreigns }}">
+  <input type="hidden" name="japaneses" value="{{ japaneses }}">
+  <input type="hidden" name="scores" value="{{ scores }}">
+  <input type="hidden" name="pronunciations" value="{{ pronunciations }}">
+  <input type="hidden" name="language" value="{{language }}">
+  </form>
+</div>
+
+{% endif %}
+
+{% endblock %}

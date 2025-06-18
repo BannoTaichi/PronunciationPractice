@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <h2>録音結果</h2>
+
+    <h3>正しい文</h3>
+    <list>
+        {% for foreign in foreigns %}
+            <li>{{ foreign }}</li>
+        {% endfor %}
+    
+    <h3>意味</h3>
+    <list>
+        {% for japanese in japaneses %}
+            <li>{{ japanese }}</li>
+        {% endfor %}
+
+    <h3>あなたの発音</h3>
+    <list>
+        {% for pronunciation in pronunciations %}
+            <li>{{ pronunciation }}</li>
+        {% endfor %}
+    </list>
+
+    <h3>類似度スコア</h3>
+    <list>
+        {% for score in scores %}
+            <li>{{ score }}</li>
+        {% endfor %}
+    </list>
+
+    <a href="/">戻る</a>
+{% endblock %}

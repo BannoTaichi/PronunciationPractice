@@ -8,6 +8,9 @@ from rapidfuzz import fuzz
 # [IN] (str) lang: 言語コード（デフォルトは英語 "en"）
 # [OUT] (str) user_sentence: ユーザーの発音の文字起こし
 def transcript(audio_file, lang="en"):
+    if audio_file is None:
+        print("音声ファイルが指定されていません。")
+        return ""
     model = whisper.load_model("medium")
     # Whisperで文字起こし
     voice = model.transcribe(audio_file, language=lang)
@@ -32,8 +35,8 @@ def evaluate(collect_sentence, user_sentence):
 
 if __name__ == "__main__":
     # テスト用の音声ファイルと文
-    collect_sentence = "Hello, how are you?"
-    audio_filename = "../audio/record.wav"
+    collect_sentence = "The old lighthouse stood resilient against the relentless crashing waves, a steadfast beacon guiding ships through treacherous waters."
+    audio_filename = "audio/record.wav"
 
     # 音声評価を実行
     user_sentence = transcript(audio_filename)

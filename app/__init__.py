@@ -1,8 +1,15 @@
 from flask import Flask, render_template, request
-from .generate import Model
-from .record import Recorder
+from .generate import create_sentences
 from .transcript import transcript, evaluate
-import re
+from .record import Recorder
+import ast
+import pyaudio
+
+FORMAT = pyaudio.paInt16
+CHANNELS = 1
+RATE = 44100
+CHUNK = 1024
+OUTPUT_FILENAME = "app/audio/record.wav"
 
 app = Flask(__name__)
 
@@ -12,68 +19,116 @@ def index():
     return render_template("index.html")
 
 
-@app.route("/record", methods=["GET", "POST"])
+@app.route("/record", methods=["POST"])
 def record():
-    if request.method == "POST":
-        # 言語、ユーザーが自分のテキストを使用するかどうか、録音時間を取得
-        language = request.form.get("language")
-        use_my_text = request.form.get("use_my_text")
-        rec_time = int(request.form.get("rec_time"))
+    # フォームからのデータ取得
+    language = request.form.get("language")
+    use_my_text = request.form.get("use_my_text")
+    raw_text = request.form.get("raw_text", None)
 
-        # ユーザーが自分のテキストを使用する場合、テキストを取得
-        # それ以外の場合はAIによる文生成
-        if use_my_text == "Yes":
-            raw_text = request.form.get("raw_text")
-            sentences = [
-                sentence.strip()
-                for sentence in re.split(r"\s*[.?!]\s*", raw_text)
-                if sentence.strip()
-            ]
-        else:
-            model = Model()
-            # sentences = model.generate_text(language=language)
-            sentences = """
-                The old lighthouse stood resilient against the relentless crashing waves, a steadfast beacon guiding ships through treacherous waters.
+    idx = int(request.form.get("idx", 0))
+    foreigns = request.form.get("foreigns")
+    japaneses = request.form.get("japaneses")
+    scores = request.form.get("scores", "[]")
+    pronunciations = request.form.get("pronunciations", "[]")
 
-                古びた灯台は、容赦なく打ち寄せる波に耐え、危険な海域を航行する船を導く、揺るぎない灯台として立っていた。
-
-                Despite facing numerous setbacks, she remained determined to pursue her dream of becoming a renowned astrophysicist, fueled by her unwavering passion for the cosmos.
-
-                幾多の挫折に直面しても、彼女は宇宙に対する揺るぎない情熱に突き動かされ、著名な天体物理学者になるという夢を追い続ける決意を固くしていた。
-
-                The intricate tapestry of cultures in the city created a vibrant and dynamic atmosphere, where traditions from around the world intertwined harmoniously.
-
-                その都市の複雑に織りなされた文化のタペストリーは、活気に満ちたダイナミックな雰囲気を作り出し、世界中の伝統が調和して絡み合っていた。
-
-                He grappled with the ethical dilemma of whether to prioritize short-term profits or long-term sustainability, knowing that the decision would have far-reaching consequences.
-
-                彼は、短期的な利益を優先すべきか、長期的な持続可能性を優先すべきかという倫理的なジレンマに苦しみ、その決定が広範囲に及ぶ結果をもたらすことを知っていた。
-
-                The abandoned train station, a relic of a bygone era, echoed with the ghosts of forgotten journeys and whispered tales of farewells and reunions.
-
-                見捨てられた駅は、過ぎ去った時代の遺物であり、忘れられた旅の亡霊がこだまし、別れと再会の物語を囁いていた。
-                """
-            foreigns, japaneses = model.separate_sentences(sentences)
-
-        # 変数の内容をデバッグ用に出力
-        print(
-            f"Language: {language}\nUse My Text: {use_my_text}\nRec Time: {rec_time}\n\nForeigns: \n{foreigns}\nJapaneses: \n{japaneses}"
+    # 初回アクセス時の処理
+    if idx == 0:
+        # geminiAPIを使用する場合は、use_model=Trueに設定
+        foreigns, japaneses = create_sentences(
+            use_my_text, raw_text, language, use_model=False
         )
-
-        # 録音の順番をカウント
-        num = len(sentences)
-        try:
-            idx = int(request.form.get("idx"))
-        except:
-            idx = 0
-
+        print(f"Foreigns: {foreigns}\nJapaneses: {japaneses}")
         return render_template(
             "record.html",
+            recording=True,
             foreigns=foreigns,
             japaneses=japaneses,
-            num=num,
             idx=idx,
+            scores=scores,
+            pronunciations=pronunciations,
         )
+    # 音声ファイルがアップロードされた場合の処理
+    else:
+        foreigns = ast.literal_eval(foreigns)
+        japaneses = ast.literal_eval(japaneses)
+        scores = ast.literal_eval(scores)
+        pronunciations = ast.literal_eval(pronunciations)
+        print(pronunciations)
+
+        print(f"\n\tIndex: {idx-1}")
+        print(f"Foreign: {foreigns[idx-1]}")
+        print(f"Japanese: {japaneses[idx-1]}")
+        print(f"Pronunciation: {pronunciations[idx-1]}")
+        print(f"\tScore: {scores[idx-1]}\n")
+
+        # 次のインデックスに進む
+        if idx < len(foreigns):
+            return render_template(
+                "record.html",
+                recording=True,
+                foreigns=foreigns,
+                japaneses=japaneses,
+                idx=idx,
+                scores=scores,
+                pronunciations=pronunciations,
+                language=language,
+            )
+        # 最後のインデックスに到達した場合、結果を表示
+        else:
+            return render_template(
+                "result.html",
+                foreigns=foreigns,
+                japaneses=japaneses,
+                pronunciations=pronunciations,
+                scores=scores,
+            )
+
+
+@app.route("/sound", methods=["POST"])
+def sound():
+    idx = int(request.form.get("idx", 0))
+    foreigns = request.form.get("foreigns")
+    japaneses = request.form.get("japaneses")
+    scores = request.form.get("scores", "[]")
+    pronunciations = request.form.get("pronunciations", "[]")
+    language = request.form.get("language")
+
+    foreigns = ast.literal_eval(foreigns)
+    japaneses = ast.literal_eval(japaneses)
+    pronunciations = ast.literal_eval(pronunciations)
+    scores = ast.literal_eval(scores)
+
+    recorder = Recorder(
+        format=FORMAT,
+        channels=CHANNELS,
+        rate=RATE,
+        chunk=CHUNK,
+        lang=language,
+        filename=OUTPUT_FILENAME,
+    )
+
+    recorder.run_GUI()
+    print("録音GUI終了")
+
+    user_sentence = transcript(OUTPUT_FILENAME, lang=recorder.lang)
+    score = evaluate(collect_sentence=foreigns[idx], user_sentence=user_sentence)[
+        "類似度スコア"
+    ]
+
+    pronunciations.append(user_sentence)
+    scores.append(score)
+
+    return render_template(
+        "record.html",
+        recording=False,
+        foreigns=foreigns,
+        japaneses=japaneses,
+        idx=idx,
+        scores=scores,
+        pronunciations=pronunciations,
+        language=language,
+    )
 
 
 if __name__ == "__main__":
