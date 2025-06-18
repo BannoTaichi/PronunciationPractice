@@ -2,3 +2,4 @@ google-generativeai==0.8.5
 dotenv==1.1.0
 rapidfuzz==3.13.0
 openai-whisper==20240930
+ffmpeg==7.1.1
