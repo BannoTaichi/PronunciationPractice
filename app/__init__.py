@@ -2,14 +2,15 @@ from flask import Flask, render_template, request
 from .generate import create_sentences
 from .transcript import transcript, evaluate
 from .record import Recorder
-import ast
-import pyaudio
+from ast import literal_eval
+from pyaudio import paInt16
 
-FORMAT = pyaudio.paInt16
+FORMAT = paInt16
 CHANNELS = 1
 RATE = 44100
 CHUNK = 1024
 OUTPUT_FILENAME = "app/audio/record.wav"
+USE_MODEL = False  # geminiAPIを使用するかどうか
 
 app = Flask(__name__)
 
@@ -21,114 +22,84 @@ def index():
 
 @app.route("/record", methods=["POST"])
 def record():
-    # フォームからのデータ取得
-    language = request.form.get("language")
+    # index.htmlからのデータ取得
     use_my_text = request.form.get("use_my_text")
-    raw_text = request.form.get("raw_text", None)
-
-    idx = int(request.form.get("idx", 0))
-    foreigns = request.form.get("foreigns")
-    japaneses = request.form.get("japaneses")
-    scores = request.form.get("scores", "[]")
-    pronunciations = request.form.get("pronunciations", "[]")
-
-    # 初回アクセス時の処理
-    if idx == 0:
-        # geminiAPIを使用する場合は、use_model=Trueに設定
-        foreigns, japaneses = create_sentences(
-            use_my_text, raw_text, language, use_model=False
-        )
-        print(f"Foreigns: {foreigns}\nJapaneses: {japaneses}")
-        return render_template(
-            "record.html",
-            recording=True,
-            foreigns=foreigns,
-            japaneses=japaneses,
-            idx=idx,
-            scores=scores,
-            pronunciations=pronunciations,
-        )
-    # 音声ファイルがアップロードされた場合の処理
+    if use_my_text == "Yes":
+        use_my_text = True
     else:
-        foreigns = ast.literal_eval(foreigns)
-        japaneses = ast.literal_eval(japaneses)
-        scores = ast.literal_eval(scores)
-        pronunciations = ast.literal_eval(pronunciations)
-        print(pronunciations)
+        use_my_text = False
+    raw_text = request.form.get("raw_text", None)
+    language = request.form.get("language")
 
-        print(f"\n\tIndex: {idx-1}")
-        print(f"Foreign: {foreigns[idx-1]}")
-        print(f"Japanese: {japaneses[idx-1]}")
-        print(f"Pronunciation: {pronunciations[idx-1]}")
-        print(f"\tScore: {scores[idx-1]}\n")
+    # idxが0ならindex.html、-1ならrecord.htmlからのアクセス
+    idx = int(request.form.get("idx", -1))
 
-        # 次のインデックスに進む
-        if idx < len(foreigns):
-            return render_template(
-                "record.html",
-                recording=True,
-                foreigns=foreigns,
-                japaneses=japaneses,
-                idx=idx,
-                scores=scores,
-                pronunciations=pronunciations,
-                language=language,
-            )
-        # 最後のインデックスに到達した場合、結果を表示
-        else:
-            return render_template(
-                "result.html",
-                foreigns=foreigns,
-                japaneses=japaneses,
-                pronunciations=pronunciations,
-                scores=scores,
-            )
+    if idx == 0:  # 初回アクセス時の処理
+        foreigns, japaneses = create_sentences(
+            raw_text, language, use_my_text=use_my_text, use_model=USE_MODEL
+        )
+        data = {
+            "recording": True,
+            "language": language,
+            "idx": idx,
+            "foreigns": foreigns,
+            "japaneses": japaneses,
+            "pronunciations": [],
+            "scores": [],
+        }
+        return render_template("record.html", data=data)
+
+    else:  # 音声ファイルがアップロードされた場合の処理
+        data = request.form.get("data")
+        data = literal_eval(data)
+
+        print(
+            f"""
+Index:        {data['idx']}
+Foreign:      {data['foreigns'][data['idx']]}
+Japanese:     {data['japaneses'][data['idx']]}
+Pronunciation:{data['pronunciations'][data['idx']]}
+Score:        {data['scores'][data['idx']]}\n"""
+        )
+
+        if data["idx"] < len(data["foreigns"]) - 1:  # 次のインデックスに進む
+            data["recording"] = True
+            data["idx"] += 1
+            return render_template("record.html", data=data)
+
+        else:  # 最後のインデックスに到達した場合、結果を表示
+            return render_template("result.html", data=data)
 
 
 @app.route("/sound", methods=["POST"])
 def sound():
-    idx = int(request.form.get("idx", 0))
-    foreigns = request.form.get("foreigns")
-    japaneses = request.form.get("japaneses")
-    scores = request.form.get("scores", "[]")
-    pronunciations = request.form.get("pronunciations", "[]")
-    language = request.form.get("language")
+    data = request.form.get("data")
+    data = literal_eval(data)
 
-    foreigns = ast.literal_eval(foreigns)
-    japaneses = ast.literal_eval(japaneses)
-    pronunciations = ast.literal_eval(pronunciations)
-    scores = ast.literal_eval(scores)
+    foreigns = data["foreigns"]
 
     recorder = Recorder(
         format=FORMAT,
         channels=CHANNELS,
         rate=RATE,
         chunk=CHUNK,
-        lang=language,
+        lang=data["language"],
         filename=OUTPUT_FILENAME,
     )
-
     recorder.run_GUI()
     print("録音GUI終了")
 
-    user_sentence = transcript(OUTPUT_FILENAME, lang=recorder.lang)
-    score = evaluate(collect_sentence=foreigns[idx], user_sentence=user_sentence)[
-        "類似度スコア"
-    ]
-
-    pronunciations.append(user_sentence)
-    scores.append(score)
-
-    return render_template(
-        "record.html",
-        recording=False,
-        foreigns=foreigns,
-        japaneses=japaneses,
-        idx=idx,
-        scores=scores,
-        pronunciations=pronunciations,
-        language=language,
+    pronunciation = transcript(OUTPUT_FILENAME, lang=recorder.lang)
+    score = int(
+        evaluate(collect_sentence=foreigns[data["idx"]], pronunciation=pronunciation)[
+            "類似度"
+        ]
     )
+
+    data["recording"] = False
+    data["pronunciations"].append(pronunciation)
+    data["scores"].append(score)
+    return render_template("record.html", data=data)
 
 
 if __name__ == "__main__":

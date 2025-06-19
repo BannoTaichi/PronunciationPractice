@@ -5,26 +5,26 @@
 
     <h3>正しい文</h3>
     <list>
-        {% for foreign in foreigns %}
+        {% for foreign in data["foreigns"] %}
             <li>{{ foreign }}</li>
         {% endfor %}
     
     <h3>意味</h3>
     <list>
-        {% for japanese in japaneses %}
+        {% for japanese in data["japaneses"] %}
             <li>{{ japanese }}</li>
         {% endfor %}
 
     <h3>あなたの発音</h3>
     <list>
-        {% for pronunciation in pronunciations %}
+        {% for pronunciation in data["pronunciations"] %}
             <li>{{ pronunciation }}</li>
         {% endfor %}
     </list>
 
     <h3>類似度スコア</h3>
     <list>
-        {% for score in scores %}
+        {% for score in data["scores"] %}
             <li>{{ score }}</li>
         {% endfor %}
     </list>

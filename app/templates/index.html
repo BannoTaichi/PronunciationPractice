@@ -3,7 +3,7 @@
 
 <form action="/record" method="post">
     <!-- 言語選択 -->
-    <label for="language">チェックする言語:</label>
+    <label for="language">チェックする言語：</label>
     <select name="language">
       <option value="英語">英語</option>
       <option value="韓国語">韓国語</option>
@@ -11,27 +11,27 @@
     <br>
 
     <!-- 自分の文章を使うか選択 -->
-    <label for="use_my_text">自分の文章を使いますか?</label>
+    <label for="use_my_text">自分の文章を使いますか？</label>
     <select id="use_my_text" name="use_my_text" onchange="toggleOptions()">
       <option value="No">No</option>
       <option value="Yes">Yes</option>
     </select>
-    <script>
-    function toggleOptions() {
-        var use_my_text = document.getElementById("use_my_text").value;
-        document.getElementById("userText").style.display = (use_my_text === "Yes") ? "block" : "none";
-    }
-    </script>
     <br>
 
     <!-- 自分の文章を入力欄 -->
     <div id="userText" style="display: none;">
-        <label for="raw_text">文章を入力:</label>
+        <p for="raw_text">練習したい文章を入力してください：</p>
         <textarea name="raw_text"></textarea>
     </div>
     <br>
-
     <button type="submit">チェック開始</button>
+    <input type="hidden" name="idx" value="0">
 </form>
 
+<script>
+function toggleOptions() {
+    var use_my_text = document.getElementById("use_my_text").value;
+    document.getElementById("userText").style.display = (use_my_text === "Yes") ? "block" : "none";
+}
+</script>
 {% endblock %}

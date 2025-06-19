@@ -1,8 +1,6 @@
-import pyaudio
+from pyaudio import PyAudio, paInt16
 import wave
-import pandas as pd
-from rapidfuzz import fuzz
-import threading
+from threading import Thread
 import tkinter as tk
 
 try:
@@ -22,7 +20,7 @@ class Recorder:
         self.filename = filename  # 保存する音声ファイル名
 
         # PyAudioの初期化
-        self.audio = pyaudio.PyAudio()
+        self.audio = PyAudio()
         input_device_index = self.select_device()  # デバイスの選択
         self.stream = self.audio.open(
             format=format,
@@ -42,7 +40,7 @@ class Recorder:
 
     # 入力デバイスを選択
     def select_device(self):
-        p = pyaudio.PyAudio()  # pyaudio の初期化
+        p = self.audio
         input_device_index = None
         for i in range(p.get_device_count()):
             info = p.get_device_info_by_index(i)
@@ -89,6 +87,7 @@ class Recorder:
         stream.close()
         audio.terminate()
         self.save_audio()  # 音声ファイルを保存
+        self.root.destroy()
 
     # 音声ファイルを保存するメソッド
     def save_audio(self):
@@ -105,27 +104,35 @@ class Recorder:
     def on_record_button_click(self):
         global recording
         recording = True
-        threading.Thread(target=self.start_recording).start()
+        Thread(target=self.start_recording).start()
 
     # GUI を表示
     def run_GUI(self):
-        root = tk.Tk()
-        root.title("録音アプリ")
+        self.root = tk.Tk()
+        self.root.title("録音アプリ")
+        self.root.geometry("200x130")
+        self.root.attributes("-topmost", True)
+
+        frame = tk.Frame(self.root)
+        frame.place(relx=0.5, rely=0.5, anchor="center")
+
         record_button = tk.Button(
-            root, text="録音開始", command=self.on_record_button_click
+            frame, text="録音開始", command=self.on_record_button_click
         )
         record_button.pack(pady=10)
-        stop_button = tk.Button(root, text="録音停止", command=self.stop_recording)
+
+        stop_button = tk.Button(frame, text="録音停止", command=self.stop_recording)
         stop_button.pack(pady=10)
-        root.mainloop()
+
+        self.root.mainloop()
 
 
 if __name__ == "__main__":
-    FORMAT = pyaudio.paInt16
+    FORMAT = paInt16
     CHANNELS = 1
     RATE = 44100
     CHUNK = 1024
-    OUTPUT_FILENAME = "../audio/record.wav"
+    OUTPUT_FILENAME = "audio/record.wav"
 
     recorder = Recorder(
         format=FORMAT,

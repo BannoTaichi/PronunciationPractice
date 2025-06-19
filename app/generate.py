@@ -1,10 +1,10 @@
 import google.generativeai as genai
 from dotenv import load_dotenv
-import os
-import re
+from os import getenv
+from re import split
 
 load_dotenv()
-API_KEY = os.getenv("API_KEY")
+API_KEY = getenv("API_KEY")
 
 
 # Google Geminiを使用して文を生成するクラス
@@ -45,11 +45,11 @@ class Model:
         return foreigns, japaneses
 
 
-def create_sentences(use_my_text, raw_text, language, use_model=False):
-    if use_my_text == "Yes" and raw_text:
+def create_sentences(raw_text, language, use_my_text=False, use_model=False):
+    if use_my_text and raw_text:
         sentences = [
             sentence.strip()
-            for sentence in re.split(r"\s*[.?!]\s*", raw_text)
+            for sentence in split(r"\s*[.?!]\s*", raw_text)
             if sentence.strip()
         ]
         foreigns = sentences
